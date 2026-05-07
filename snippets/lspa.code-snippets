@@ -1,0 +1,72 @@
+{
+    "LSPA Component": {
+        "prefix": "lspa-component",
+        "body": [
+            "@import ${1:FeatureCard} from '${2:./FeatureCard/FeatureCard.lspa}'",
+            "",
+            "<python>",
+            "class ${3:ComponentName}(Component):",
+            "  def setup(self, props):",
+            "    state = {",
+            "      \"count\": 0",
+            "    }",
+            "",
+            "    def ${4:increment}():",
+            "      state[\"count\"] += 1",
+            "</python>",
+            "",
+            "<template>",
+            "  <button @click=\"${4:increment}\">{{ state.count }}</button>",
+            "  <${1:FeatureCard} />",
+            "</template>",
+            "",
+            "<style>",
+            "  button {",
+            "    color: red;",
+            "  }",
+            "</style>"
+        ],
+        "description": "Create a full .lspa component"
+    },
+    "LSPA State": {
+        "prefix": "lspa-state",
+        "body": [
+            "state = {",
+            "  \"${1:key}\": ${2:0}",
+            "}"
+        ],
+        "description": "Create reactive state object"
+    },
+    "LSPA i-for": {
+        "prefix": "i-for",
+        "body": [
+            "<li i-for=\"${1:item} in ${2:items}\">",
+            "  {{ ${1:item} }}",
+            "</li>"
+        ],
+        "description": "Template loop directive"
+    },
+    "LSPA i-if": {
+        "prefix": "i-if",
+        "body": [
+            "<div i-if=\"${1:condition}\">",
+            "  $0",
+            "</div>"
+        ],
+        "description": "Template conditional directive"
+    },
+    "LSPA click event": {
+        "prefix": "@click",
+        "body": [
+            "@click=\"${1:handler}\""
+        ],
+        "description": "Click event binding"
+    },
+    "LSPA i-model": {
+        "prefix": "i-model",
+        "body": [
+            "i-model=\"${1:state.field}\""
+        ],
+        "description": "Two-way model binding directive"
+    }
+}

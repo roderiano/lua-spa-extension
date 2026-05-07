@@ -1,0 +1,86 @@
+{
+    "name": "lua-spa-extension-clean",
+    "displayName": "LUA-SPA Clean",
+    "description": "Extension for backend-first SPA framework in Python.",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.118.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "main": "./out/src/extension.js",
+    "contributes": {
+        "languages": [
+            {
+                "id": "lspa",
+                "aliases": [
+                    "LSPA",
+                    "lspa"
+                ],
+                "extensions": [
+                    ".lspa"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "lspa",
+                "scopeName": "source.lspa",
+                "path": "./syntaxes/lspa.tmLanguage.json",
+                "embeddedLanguages": {
+                    "meta.embedded.block.python": "python",
+                    "meta.embedded.block.lspa.template": "html",
+                    "meta.embedded.block.lspa.style": "css"
+                }
+            },
+            {
+                "scopeName": "lspa.injection",
+                "path": "./syntaxes/lspa.injection.tmLanguage.json",
+                "injectTo": [
+                    "text.html.basic"
+                ]
+            }
+        ],
+        "snippets": [
+            {
+                "language": "lspa",
+                "path": "./snippets/lspa.code-snippets"
+            }
+        ],
+        "commands": [
+            {
+                "command": "lspa.restartLanguageServer",
+                "title": "LSPA: Restart Language Server"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src packages",
+        "test": "vscode-test"
+    },
+    "devDependencies": {
+        "@types/mocha": "^10.0.10",
+        "@types/node": "22.x",
+        "@types/vscode": "^1.118.0",
+        "@vscode/test-cli": "^0.0.12",
+        "@vscode/test-electron": "^2.5.2",
+        "eslint": "^9.39.3",
+        "typescript": "^5.9.3",
+        "typescript-eslint": "^8.56.1"
+    },
+    "dependencies": {
+        "postcss": "^8.5.6",
+        "pyright": "^1.1.406",
+        "vscode-languageclient": "^9.0.1",
+        "vscode-languageserver": "^9.0.1",
+        "vscode-languageserver-textdocument": "^1.0.12",
+        "vscode-uri": "^3.1.0",
+        "web-tree-sitter": "^0.25.10"
+    }
+}

@@ -1,0 +1,14 @@
+{
+    "scopeName": "lspa.injection",
+    "injectionSelector": "L:text.html.basic meta.embedded.block.lspa.template",
+    "patterns": [
+        {
+            "match": "(@click|i-for|i-if|i-else|i-elif|i-model)",
+            "name": "keyword.control.directive.lspa"
+        },
+        {
+            "match": "\\{\\{\\s*[^\\}]+\\s*\\}\\}",
+            "name": "variable.interpolation.lspa"
+        }
+    ]
+}

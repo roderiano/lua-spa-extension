@@ -1,0 +1,117 @@
+{
+    "scopeName": "source.lspa",
+    "name": "LSPA",
+    "patterns": [
+        {
+            "include": "#imports"
+        },
+        {
+            "include": "#python"
+        },
+        {
+            "include": "#template"
+        },
+        {
+            "include": "#style"
+        },
+        {
+            "include": "#mustache"
+        }
+    ],
+    "repository": {
+        "imports": {
+            "patterns": [
+                {
+                    "match": "@import\\s+([A-Za-z_][A-Za-z0-9_-]*)\\s+from\\s+['\"][^'\"]+['\"]",
+                    "name": "keyword.control.import.lspa"
+                },
+                {
+                    "match": "['\"][^'\"]+['\"]",
+                    "name": "string.quoted.import-path.lspa"
+                }
+            ]
+        },
+        "python": {
+            "begin": "<python\\b[^>]*>",
+            "beginCaptures": {
+                "0": {
+                    "name": "entity.name.tag.python.lspa"
+                }
+            },
+            "end": "</python>",
+            "endCaptures": {
+                "0": {
+                    "name": "entity.name.tag.python.lspa"
+                }
+            },
+            "contentName": "meta.embedded.block.python",
+            "patterns": [
+                {
+                    "include": "source.python"
+                }
+            ]
+        },
+        "template": {
+            "begin": "<template\\b[^>]*>",
+            "beginCaptures": {
+                "0": {
+                    "name": "entity.name.tag.template.lspa"
+                }
+            },
+            "end": "</template>",
+            "endCaptures": {
+                "0": {
+                    "name": "entity.name.tag.template.lspa"
+                }
+            },
+            "contentName": "meta.embedded.block.lspa.template",
+            "patterns": [
+                {
+                    "include": "text.html.basic"
+                },
+                {
+                    "match": "(@click|i-for|i-if|i-else|i-elif|i-model)",
+                    "name": "keyword.control.directive.lspa"
+                },
+                {
+                    "match": "\\{\\{[^\\}]*\\}\\}",
+                    "name": "meta.interpolation.lspa"
+                }
+            ]
+        },
+        "style": {
+            "begin": "<style\\b[^>]*>",
+            "beginCaptures": {
+                "0": {
+                    "name": "entity.name.tag.style.lspa"
+                }
+            },
+            "end": "</style>",
+            "endCaptures": {
+                "0": {
+                    "name": "entity.name.tag.style.lspa"
+                }
+            },
+            "contentName": "meta.embedded.block.lspa.style",
+            "patterns": [
+                {
+                    "include": "source.css"
+                },
+                {
+                    "include": "source.css.scss"
+                },
+                {
+                    "include": "source.css.less"
+                }
+            ]
+        },
+        "mustache": {
+            "patterns": [
+                {
+                    "match": "\\{\\{\\s*[^\\}]+\\s*\\}\\}",
+                    "name": "variable.interpolation.lspa"
+                }
+            ]
+        }
+    }
+}
