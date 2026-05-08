@@ -21,7 +21,11 @@
                 "extensions": [
                     ".lspa"
                 ],
-                "configuration": "./language-configuration.json"
+                "configuration": "./language-configuration.json",
+                "icon": {
+                    "light": "./images/favicon.ico",
+                    "dark": "./images/favicon.ico"
+                }
             }
         ],
         "grammars": [
