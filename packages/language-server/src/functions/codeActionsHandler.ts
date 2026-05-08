@@ -74,7 +74,7 @@ export async function handleCodeActions(
                     edit: {
                         documentChanges: [
                             TextDocumentEdit.create({ uri: document.uri, version: document.version }, [
-                                TextEdit.insert(document.positionAt(pythonBlock.contentRange.end), `\n\n  def ${methodName}(self):\n    pass\n`)
+                                TextEdit.insert(document.positionAt(pythonBlock.contentRange.end), `\n\t\tdef ${methodName}(self):\n\t\t\tpass\n`)
                             ])
                         ]
                     }
@@ -93,7 +93,7 @@ export async function handleCodeActions(
                     edit: {
                         documentChanges: [
                             TextDocumentEdit.create({ uri: document.uri, version: document.version }, [
-                                TextEdit.insert(document.positionAt(pythonBlock.contentRange.end), `\n    state['${missing}'] = None\n`)
+                                TextEdit.insert(document.positionAt(pythonBlock.contentRange.end), `\t\tstate['${missing}'] = None\n`)
                             ])
                         ]
                     }

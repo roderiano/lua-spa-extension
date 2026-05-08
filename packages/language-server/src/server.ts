@@ -127,74 +127,46 @@ connection.onHover((params): Hover | null => {
     const graph = getGraph(document, graphCache);
     const offset = document.offsetAt(params.position);
 
+    const createHover = (value: string): Hover => ({
+        contents: {
+            kind: 'markdown',
+            value
+        }
+    });
+
     const stateEntry = graph.ast.state.find((entry) => containsOffset(entry.nameRange, offset));
     if (stateEntry) {
-        return {
-            contents: {
-                kind: 'markdown',
-                value: `state.${stateEntry.name}: ${stateEntry.type}\n\nreactive state`
-            }
-        };
+        return createHover(`**Reactive state**\n\n\`state.${stateEntry.name}: ${stateEntry.type}\``);
     }
 
     const propsEntry = graph.ast.props.find((entry) => containsOffset(entry.nameRange, offset));
     if (propsEntry) {
-        return {
-            contents: {
-                kind: 'markdown',
-                value: `props.${propsEntry.name}: ${propsEntry.type}\n\ncomponent prop`
-            }
-        };
+        return createHover(`**Component prop**\n\n\`props.${propsEntry.name}: ${propsEntry.type}\``);
     }
 
     const pyEntry = graph.ast.pyData.find((entry) => containsOffset(entry.nameRange, offset));
     if (pyEntry) {
-        return {
-            contents: {
-                kind: 'markdown',
-                value: `py.${pyEntry.name}: ${pyEntry.type}\n\nvalue exposed from data object`
-            }
-        };
+        return createHover(`**Python data value**\n\n\`py.${pyEntry.name}: ${pyEntry.type}\``);
     }
 
     const method = graph.ast.methods.find((entry) => containsOffset(entry.range, offset));
     if (method && graph.python.frameworkMethodDocs.has(method.name)) {
-        return {
-            contents: {
-                kind: 'markdown',
-                value: `**${method.name}()**\n\n${graph.python.frameworkMethodDocs.get(method.name)}`
-            }
-        };
+        return createHover(`**${method.name}()**\n\n${graph.python.frameworkMethodDocs.get(method.name)}`);
     }
 
     const directive = graph.ast.directives.find((entry) => containsOffset(entry.range, offset));
     if (directive) {
-        return {
-            contents: {
-                kind: 'markdown',
-                value: `**${directive.name}** directive for .lspa template control flow`
-            }
-        };
+        return createHover(`**${directive.name}**\n\nTemplate control-flow directive (.lspa).`);
     }
 
     const event = graph.ast.events.find((entry) => containsOffset(entry.range, offset));
     if (event) {
-        return {
-            contents: {
-                kind: 'markdown',
-                value: `**${event.name}** event bound to method \`${event.handler}\``
-            }
-        };
+        return createHover(`**${event.name}**\n\nEvent bound to method \`${event.handler}\`.`);
     }
 
     const interpolation = graph.ast.interpolations.find((entry) => containsOffset(entry.expressionRange, offset));
     if (interpolation) {
-        return {
-            contents: {
-                kind: 'markdown',
-                value: `Interpolation expression: \`${interpolation.expression}\``
-            }
-        };
+        return createHover(`**Interpolation expression**\n\n\`${interpolation.expression}\``);
     }
 
     return null;
