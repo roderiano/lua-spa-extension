@@ -1,8 +1,23 @@
 import type { BlockNode } from '../types';
 
-function extractSrc(openingTag: string): string | undefined {
-    const m = openingTag.match(/\bsrc\s*=\s*["']([^"']*)["']/);
-    return m?.[1];
+function extractSrc(openingTag: string): { value: string; start: number; end: number } | undefined {
+    const regex = /\bsrc\s*=\s*["']([^"']*)["']/;
+    const match = regex.exec(openingTag);
+    if (!match || match.index === undefined) {
+        return undefined;
+    }
+
+    const value = match[1];
+    const valueStart = openingTag.indexOf(value, match.index);
+    if (valueStart < 0) {
+        return undefined;
+    }
+
+    return {
+        value,
+        start: valueStart,
+        end: valueStart + value.length
+    };
 }
 
 export function parseBlock(text: string, tag: 'python' | 'template' | 'style'): BlockNode | undefined {
@@ -23,7 +38,15 @@ export function parseBlock(text: string, tag: 'python' | 'template' | 'style'): 
             range: { start, end },
             contentRange: { start: contentStart, end: contentEnd },
             content,
-            ...(src ? { src } : {})
+            ...(src
+                ? {
+                    src: src.value,
+                    srcRange: {
+                        start: start + src.start,
+                        end: start + src.end
+                    }
+                }
+                : {})
         };
     }
 
@@ -40,7 +63,15 @@ export function parseBlock(text: string, tag: 'python' | 'template' | 'style'): 
             range: { start, end },
             contentRange: { start: end, end },
             content: '',
-            ...(src ? { src } : {})
+            ...(src
+                ? {
+                    src: src.value,
+                    srcRange: {
+                        start: start + src.start,
+                        end: start + src.end
+                    }
+                }
+                : {})
         };
     }
 

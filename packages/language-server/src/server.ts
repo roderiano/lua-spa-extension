@@ -51,7 +51,6 @@ import { type ComponentCache, type CrossSemanticGraph, type GraphCache } from '.
 import {
     collectWorkspaceComponents,
     extractWorkspaceRoots,
-    relativeImportPath,
     resolveImportPath
 } from './functions/workspace';
 
@@ -180,6 +179,48 @@ connection.onDefinition(async (params): Promise<Definition | null> => {
     const graph = getGraph(document, graphCache);
     const offset = document.offsetAt(params.position);
 
+    const isSameRange = (a: { start: number; end: number }, b: { start: number; end: number }): boolean => {
+        return a.start === b.start && a.end === b.end;
+    };
+
+    const resolveDefinitionOrOccurrences = (): Definition | null => {
+        const refs = collectSymbolReferences(graph, offset);
+        if (refs.length === 0) {
+            return null;
+        }
+
+        for (const methodEntry of graph.ast.methods) {
+            if (refs.some((range) => isSameRange(range, methodEntry.range))) {
+                return Location.create(document.uri, toLspRange(document, methodEntry.range));
+            }
+        }
+        for (const stateEntry of graph.ast.state) {
+            if (refs.some((range) => isSameRange(range, stateEntry.nameRange))) {
+                return Location.create(document.uri, toLspRange(document, stateEntry.nameRange));
+            }
+        }
+        for (const propsEntry of graph.ast.props) {
+            if (refs.some((range) => isSameRange(range, propsEntry.nameRange))) {
+                return Location.create(document.uri, toLspRange(document, propsEntry.nameRange));
+            }
+        }
+        for (const pyEntry of graph.ast.pyData) {
+            if (refs.some((range) => isSameRange(range, pyEntry.nameRange))) {
+                return Location.create(document.uri, toLspRange(document, pyEntry.nameRange));
+            }
+        }
+
+        return refs.map((range) => Location.create(document.uri, toLspRange(document, range)));
+    };
+
+    const styleBlock = graph.ast.styleBlock;
+    if (styleBlock?.src && styleBlock.srcRange && containsOffset(styleBlock.srcRange, offset)) {
+        const resolvedCssPath = resolveImportPath(document.uri, styleBlock.src, workspaceRoots);
+        if (resolvedCssPath) {
+            return Location.create(URI.file(resolvedCssPath).toString(), Range.create(0, 0, 0, 0));
+        }
+    }
+
     for (const imp of graph.ast.imports) {
         // Allows clicking the import path
         if (imp.pathRange && containsOffset(imp.pathRange, offset) && imp.path) {
@@ -195,6 +236,25 @@ connection.onDefinition(async (params): Promise<Definition | null> => {
                 return Location.create(URI.file(resolvedPath).toString(), Range.create(0, 0, 0, 0));
             }
         }
+    }
+
+    const directive = graph.ast.directives.find((entry) => containsOffset(entry.range, offset));
+    if (directive) {
+        return Location.create(document.uri, toLspRange(document, directive.range));
+    }
+
+    const event = graph.ast.events.find((entry) => containsOffset(entry.range, offset));
+    if (event) {
+        const targetMethod = graph.ast.methods.find((entry) => entry.name === event.handler);
+        if (targetMethod) {
+            return Location.create(document.uri, toLspRange(document, targetMethod.range));
+        }
+        return resolveDefinitionOrOccurrences() ?? Location.create(document.uri, toLspRange(document, event.range));
+    }
+
+    const interpolation = graph.ast.interpolations.find((entry) => containsOffset(entry.expressionRange, offset));
+    if (interpolation) {
+        return resolveDefinitionOrOccurrences() ?? Location.create(document.uri, toLspRange(document, interpolation.expressionRange));
     }
 
     for (const component of graph.ast.components) {
@@ -239,8 +299,24 @@ connection.onDefinition(async (params): Promise<Definition | null> => {
     if (classUse) {
         const cssDef = graph.css.cssClassMap.get(classUse.name);
         if (cssDef) {
+            if (styleBlock?.src && cssDef.range.start === 0 && cssDef.range.end === 0) {
+                const resolvedCssPath = resolveImportPath(document.uri, styleBlock.src, workspaceRoots);
+                if (resolvedCssPath) {
+                    return Location.create(URI.file(resolvedCssPath).toString(), Range.create(0, 0, 0, 0));
+                }
+            }
             return Location.create(document.uri, toLspRange(document, cssDef.range));
         }
+    }
+
+    const cssClass = graph.ast.cssClasses.find((entry) => containsOffset(entry.range, offset));
+    if (cssClass) {
+        return Location.create(document.uri, toLspRange(document, cssClass.range));
+    }
+
+    const definitionOrOccurrences = resolveDefinitionOrOccurrences();
+    if (definitionOrOccurrences) {
+        return definitionOrOccurrences;
     }
 
     return null;
