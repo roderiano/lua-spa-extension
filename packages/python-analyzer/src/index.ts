@@ -1,11 +1,6 @@
 import type { DataField, LspaAst, PythonSymbol } from '../../parser/src';
-
-const FRAMEWORK_METHOD_DOCS = new Map<string, string>([
-    ['mounted', 'Lifecycle hook called when the component is mounted.'],
-    ['unmounted', 'Lifecycle hook called when the component is unmounted.'],
-    ['hydrated', 'Lifecycle hook called after client hydration.'],
-    ['updated', 'Lifecycle hook called after reactive updates.']
-]);
+import { FRAMEWORK_METHOD_DOCS } from './core/constants';
+import { toSymbolMap } from './core/maps';
 
 export type PythonAnalysis = {
     methods: Map<string, PythonSymbol>;
@@ -16,25 +11,10 @@ export type PythonAnalysis = {
 };
 
 export function analyzePython(ast: LspaAst): PythonAnalysis {
-    const methods = new Map<string, PythonSymbol>();
-    for (const method of ast.methods) {
-        methods.set(method.name, method);
-    }
-
-    const state = new Map<string, DataField>();
-    for (const field of ast.state) {
-        state.set(field.name, field);
-    }
-
-    const props = new Map<string, DataField>();
-    for (const field of ast.props) {
-        props.set(field.name, field);
-    }
-
-    const pyData = new Map<string, DataField>();
-    for (const field of ast.pyData) {
-        pyData.set(field.name, field);
-    }
+    const methods = toSymbolMap<PythonSymbol>(ast.methods);
+    const state = toSymbolMap<DataField>(ast.state);
+    const props = toSymbolMap<DataField>(ast.props);
+    const pyData = toSymbolMap<DataField>(ast.pyData);
 
     return {
         methods,

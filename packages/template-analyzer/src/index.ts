@@ -1,7 +1,7 @@
 import type { DirectiveUse, EventUse, LspaAst } from '../../parser/src';
+import { ALLOWED_DIRECTIVES, ALLOWED_EVENTS } from './core/constants';
 
-export const ALLOWED_DIRECTIVES = new Set(['i-for', 'i-if', 'i-else', 'i-elif', 'i-model']);
-export const ALLOWED_EVENTS = new Set(['@click']);
+export { ALLOWED_DIRECTIVES, ALLOWED_EVENTS };
 
 export type TemplateAnalysis = {
     components: Set<string>;
