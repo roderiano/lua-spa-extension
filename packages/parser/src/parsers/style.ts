@@ -1,8 +1,19 @@
 import type { BlockNode, ClassUse } from '../types';
 
-export function parseCssClasses(block: BlockNode): ClassUse[] {
+export function parseCssClasses(block: BlockNode, externalContent?: string): ClassUse[] {
     const classes: ClassUse[] = [];
     const regex = /\.([A-Za-z_-][\w-]*)\s*\{/g;
+
+    if (externalContent !== undefined) {
+        // External CSS file: positions are not meaningful within the .lspa document
+        for (const match of externalContent.matchAll(regex)) {
+            classes.push({
+                name: match[1],
+                range: { start: 0, end: 0 }
+            });
+        }
+        return classes;
+    }
 
     for (const match of block.content.matchAll(regex)) {
         const name = match[1];

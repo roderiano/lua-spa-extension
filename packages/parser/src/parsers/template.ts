@@ -49,7 +49,7 @@ export function parseDirectives(block: BlockNode): DirectiveUse[] {
 
 export function parseEvents(block: BlockNode): EventUse[] {
     const events: EventUse[] = [];
-    const regex = /(@[A-Za-z-]+)\s*=\s*['"]([^'"]+)['"]/g;
+    const regex = /(@[A-Za-z-]+)\s*=\s*['"]([^'"]*)['"]/g;
 
     for (const match of block.content.matchAll(regex)) {
         const name = match[1];

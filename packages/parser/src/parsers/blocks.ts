@@ -1,24 +1,48 @@
 import type { BlockNode } from '../types';
 
+function extractSrc(openingTag: string): string | undefined {
+    const m = openingTag.match(/\bsrc\s*=\s*["']([^"']*)["']/);
+    return m?.[1];
+}
+
 export function parseBlock(text: string, tag: 'python' | 'template' | 'style'): BlockNode | undefined {
-    const regex = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, 'm');
-    const match = text.match(regex);
-    if (!match || match.index === undefined) {
-        return undefined;
+    // Try paired open/close tag first
+    const pairedRegex = new RegExp(`(<${tag}\\b[^>]*>)([\\s\\S]*?)<\\/${tag}>`, 'm');
+    const pairedMatch = text.match(pairedRegex);
+    if (pairedMatch && pairedMatch.index !== undefined) {
+        const whole = pairedMatch[0];
+        const openingTag = pairedMatch[1];
+        const content = pairedMatch[2] ?? '';
+        const start = pairedMatch.index;
+        const end = start + whole.length;
+        const contentStart = start + openingTag.length;
+        const contentEnd = contentStart + content.length;
+        const src = extractSrc(openingTag);
+        return {
+            tag,
+            range: { start, end },
+            contentRange: { start: contentStart, end: contentEnd },
+            content,
+            ...(src ? { src } : {})
+        };
     }
 
-    const whole = match[0];
-    const content = match[1] ?? '';
-    const start = match.index;
-    const end = start + whole.length;
-    const contentStartInWhole = whole.indexOf(content);
-    const contentStart = start + contentStartInWhole;
-    const contentEnd = contentStart + content.length;
+    // Try self-closing tag (e.g. <style src="..."/>)
+    const selfClosingRegex = new RegExp(`(<${tag}\\b[^>]*?\\/>)`, 'm');
+    const selfMatch = text.match(selfClosingRegex);
+    if (selfMatch && selfMatch.index !== undefined) {
+        const whole = selfMatch[1];
+        const start = selfMatch.index;
+        const end = start + whole.length;
+        const src = extractSrc(whole);
+        return {
+            tag,
+            range: { start, end },
+            contentRange: { start: end, end },
+            content: '',
+            ...(src ? { src } : {})
+        };
+    }
 
-    return {
-        tag,
-        range: { start, end },
-        contentRange: { start: contentStart, end: contentEnd },
-        content
-    };
+    return undefined;
 }

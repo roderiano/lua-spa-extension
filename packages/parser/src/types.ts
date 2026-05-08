@@ -16,6 +16,7 @@ export type BlockNode = {
     range: OffsetRange;
     contentRange: OffsetRange;
     content: string;
+    src?: string;
 };
 
 export type PythonSymbol = {

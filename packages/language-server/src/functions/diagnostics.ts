@@ -117,6 +117,7 @@ export function computeDiagnostics(
         }
     }
 
+
     for (const interpolation of graph.ast.interpolations) {
         const stateMatch = interpolation.expression.match(/state\.([A-Za-z_][\w]*)/);
         if (stateMatch?.[1] && !graph.python.state.has(stateMatch[1])) {
@@ -153,7 +154,7 @@ export function computeDiagnostics(
     }
 
     for (const classUse of graph.ast.templateClasses) {
-        if (graph.css.cssClassMap.has(classUse.name) || classUse.name.includes('-')) {
+        if (graph.css.cssClassMap.has(classUse.name)) {
             continue;
         }
         diagnostics.push({
