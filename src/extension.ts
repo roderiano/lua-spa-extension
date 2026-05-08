@@ -15,7 +15,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     const debugOptions = {
         module: serverModule,
         transport: TransportKind.ipc,
-        options: { execArgv: ['--nolazy'] }
+        options: { execArgv: ['--nolazy', "--inspect=6010"] }
     };
 
     const serverOptions: ServerOptions = {

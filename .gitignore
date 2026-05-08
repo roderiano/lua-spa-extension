@@ -18,7 +18,6 @@ out
 !*.test.js
 
 # IDE
-.vscode
 .vscode-test
 .idea
 *.swp

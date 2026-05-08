@@ -176,7 +176,3 @@ npm run watch
 ### Run extension
 
 Press `F5` in VS Code to launch an Extension Development Host.
-
-## Notes
-
-This codebase is intentionally modular so tree-sitter/pyright/postcss-backed deeper analysis can be expanded incrementally without rewriting the extension API surface.

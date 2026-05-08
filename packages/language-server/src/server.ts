@@ -33,7 +33,8 @@ import {
     TextDocumentSyncKind,
     TextDocumentEdit,
     TextEdit,
-    WorkspaceEdit
+    WorkspaceEdit,
+    MarkupKind
 } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
@@ -41,6 +42,7 @@ import { analyzeCss } from '../../css-analyzer/src';
 import { parseLspaDocument, type LspaAst, type OffsetRange } from '../../parser/src';
 import { analyzePython } from '../../python-analyzer/src';
 import { ALLOWED_DIRECTIVES, ALLOWED_EVENTS, analyzeTemplate } from '../../template-analyzer/src';
+import { importCompletion } from './functions/importCompletion';
 
 type CrossSemanticGraph = {
     ast: LspaAst;
@@ -166,13 +168,11 @@ connection.onCompletion(async (params: CompletionParams): Promise<CompletionItem
         }));
     }
 
-    if (/@import\s+[A-Za-z_\w-]*\s+from\s+['"][^'"]*$/.test(linePrefix)) {
-        const files = listImportCandidates(document.uri);
-        return files.map((item) => ({
-            label: item,
-            kind: CompletionItemKind.File,
-            insertText: item
-        }));
+    const lines = document.getText().split(/\r?\n/);
+    const currentLine = lines[params.position.line] ?? '';
+
+    if (/^\s*@import\s+[A-Za-z_][\w-]*$/.test(currentLine)) {
+        return importCompletion(document, params, workspaceRoots);
     }
 
     if (inTemplate && /<[A-Z][\w-]*$/.test(linePrefix)) {
@@ -838,38 +838,7 @@ function relativeImportPath(fromUri: string, toUri: string): string {
     return rel.startsWith('.') ? rel : `./${rel}`;
 }
 
-function listImportCandidates(documentUri: string): string[] {
-    const docPath = URI.parse(documentUri).fsPath;
-    const baseDir = path.dirname(docPath);
-    const candidates = new Map<string, number>(); // path -> distance
-
-    // Collects all candidates and computes path distance
-    for (const root of workspaceRoots) {
-        for (const abs of findFilesByExtensions(root, ['.lspa', '.py'])) {
-            if (abs === docPath) {
-                continue;
-            }
-
-            const rel = path.relative(baseDir, abs).replace(/\\/g, '/');
-            const importPath = rel.startsWith('.') ? rel : `./${rel}`;
-
-            // Computes distance as the difference in directory depth
-            const baseDepth = baseDir.split(path.sep).length;
-            const targetDepth = path.dirname(abs).split(path.sep).length;
-            const distance = Math.abs(baseDepth - targetDepth);
-
-            if (!candidates.has(importPath) || candidates.get(importPath)! > distance) {
-                candidates.set(importPath, distance);
-            }
-        }
-    }
-
-    // Sorts by distance (closest first)
-    return [...candidates.entries()]
-        .sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]))
-        .map(([path]) => path);
-}
-
+// TODO: REMOVE AFTER REFACTOR
 async function collectWorkspaceComponents(documentUri: string): Promise<Map<string, string>> {
     const rootKey = workspaceRoots.join('|');
     const now = Date.now();
@@ -893,6 +862,7 @@ async function collectWorkspaceComponents(documentUri: string): Promise<Map<stri
     return map;
 }
 
+// TODO: remover
 function findFilesByExtensions(root: string, extensions: string[]): string[] {
     const files: string[] = [];
     if (!fs.existsSync(root)) {
