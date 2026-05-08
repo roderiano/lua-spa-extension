@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { spawnSync } from 'node:child_process';
 import {
     LanguageClient,
     LanguageClientOptions,
@@ -9,7 +10,38 @@ import {
 
 let client: LanguageClient | undefined;
 
+function hasBlackInstalled(): boolean {
+    try {
+        const result = spawnSync('python', ['-m', 'black', '--version'], { encoding: 'utf8' });
+        return result.status === 0;
+    } catch {
+        return false;
+    }
+}
+
+async function promptBlackInstall(): Promise<void> {
+    const installAction = 'Install Black';
+    const selected = await vscode.window.showErrorMessage(
+        'LUA-SPA Clean requires Python Black. Install it using `python -m pip install black` and reload VS Code.',
+        installAction
+    );
+
+    if (selected !== installAction) {
+        return;
+    }
+
+    const terminal = vscode.window.createTerminal('LSPA Setup');
+    terminal.show(true);
+    terminal.sendText('python -m pip install black');
+    void vscode.window.showInformationMessage('Black installation started. Reload VS Code after it finishes.');
+}
+
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
+    if (!hasBlackInstalled()) {
+        await promptBlackInstall();
+        throw new Error('Black is required but not installed.');
+    }
+
     const serverModule = context.asAbsolutePath(path.join('out', 'packages', 'language-server', 'src', 'server.js'));
     const runOptions = { module: serverModule, transport: TransportKind.ipc };
     const debugOptions = {

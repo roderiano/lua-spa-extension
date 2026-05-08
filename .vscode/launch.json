@@ -20,7 +20,6 @@
             },
             "args": [
                 "--extensionDevelopmentPath=${workspaceFolder}",
-                "--disable-extensions",
                 "--user-data-dir=${workspaceFolder}/.vscode-dev-userdata"
             ],
             "outFiles": [

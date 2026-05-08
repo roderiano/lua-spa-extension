@@ -325,13 +325,14 @@ connection.onDocumentFormatting((params: DocumentFormattingParams): TextEdit[] =
         return [];
     }
 
-    const formatted = formatLspaDocument(document.getText());
-    if (formatted === document.getText()) {
+    const original = document.getText();
+    const formatted = formatLspaDocument(original);
+    if (formatted === original) {
         return [];
     }
 
-    const lastLine = document.lineCount - 1;
-    const wholeRange = Range.create(0, 0, lastLine, document.getText(Range.create(lastLine, 0, lastLine, Number.MAX_SAFE_INTEGER)).length);
+    const end = document.positionAt(original.length);
+    const wholeRange = Range.create(0, 0, end.line, end.character);
     return [TextEdit.replace(wholeRange, formatted)];
 });
 
