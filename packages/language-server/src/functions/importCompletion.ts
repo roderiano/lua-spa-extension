@@ -4,15 +4,12 @@ import {
     CompletionItem,
     CompletionItemKind,
     CompletionParams,
-    MarkupKind,
-    Position,
-    Range,
-    TextEdit
+    MarkupKind
 } from "vscode-languageserver";
 
 import { TextDocument } from "vscode-languageserver-textdocument";
 
-import { listImportCandidates } from "./utils";
+import { listImportCandidates } from "./workspace";
 
 export function importCompletion(
     document: TextDocument,
