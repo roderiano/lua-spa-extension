@@ -168,15 +168,22 @@ export function findFilesByExtensions(root: string, extensions: string[]): strin
 }
 
 function expandCandidates(filePath: string): string[] {
-    if (path.extname(filePath)) {
-        return [filePath];
+    const ext = path.extname(filePath);
+    if (ext) {
+        const baseWithoutExt = filePath.slice(0, -ext.length);
+        return [
+            filePath,
+            path.join(baseWithoutExt, `index${ext}`)
+        ];
     }
 
     return [
         `${filePath}.lspa`,
         `${filePath}.py`,
+        `${filePath}.css`,
         path.join(filePath, 'index.lspa'),
-        path.join(filePath, 'index.py')
+        path.join(filePath, 'index.py'),
+        path.join(filePath, 'index.css')
     ];
 }
 

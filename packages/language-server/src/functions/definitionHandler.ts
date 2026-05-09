@@ -5,6 +5,7 @@ import {
     TextDocumentPositionParams,
     TextDocuments
 } from 'vscode-languageserver/node';
+import * as fs from 'fs';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import {
@@ -36,6 +37,78 @@ export async function handleDefinition(
 
     const graph = getGraph(document, graphCache);
     const offset = document.offsetAt(params.position);
+
+    const createWholeFileLocation = (filePath: string): Location => {
+        const fileUri = URI.file(filePath).toString();
+        try {
+            const content = fs.readFileSync(filePath, 'utf-8');
+            const fileDocument = TextDocument.create(fileUri, 'plaintext', 0, content);
+            const end = fileDocument.positionAt(content.length);
+            return Location.create(fileUri, Range.create(0, 0, end.line, end.character));
+        } catch {
+            return Location.create(fileUri, Range.create(0, 0, 0, 0));
+        }
+    };
+
+    const createWholeFileLocationFromUri = (uri: string): Location => {
+        try {
+            const parsed = URI.parse(uri);
+            if (parsed.scheme === 'file') {
+                return createWholeFileLocation(parsed.fsPath);
+            }
+        } catch {
+            // Keep fallback to zero range when URI cannot be parsed.
+        }
+        return Location.create(uri, Range.create(0, 0, 0, 0));
+    };
+
+    const resolvePathLocation = (rawPath: string): Location | undefined => {
+        const resolvedPath = resolveImportPath(document.uri, rawPath, workspaceRoots);
+        if (!resolvedPath) {
+            return undefined;
+        }
+
+        try {
+            const content = fs.readFileSync(resolvedPath, 'utf-8');
+            const resolvedUri = URI.file(resolvedPath).toString();
+            const resolvedDocument = TextDocument.create(resolvedUri, 'plaintext', 0, content);
+            const end = resolvedDocument.positionAt(content.length);
+            return Location.create(resolvedUri, Range.create(0, 0, end.line, end.character));
+        } catch {
+            return createWholeFileLocation(resolvedPath);
+        }
+    };
+
+    const resolveExternalCssClassLocation = (className: string): Location | undefined => {
+        if (!styleBlock?.src) {
+            return undefined;
+        }
+
+        const styleLocation = resolvePathLocation(styleBlock.src);
+        if (!styleLocation) {
+            return undefined;
+        }
+
+        const resolvedCssPath = URI.parse(styleLocation.uri).fsPath;
+
+        try {
+            const content = fs.readFileSync(resolvedCssPath, 'utf-8');
+            const cssUri = URI.file(resolvedCssPath).toString();
+            const cssDocument = TextDocument.create(cssUri, 'css', 0, content);
+            const escapedName = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`\\.${escapedName}\\b`, 'g');
+            const match = regex.exec(content);
+            if (!match || match.index === undefined) {
+                return createWholeFileLocation(resolvedCssPath);
+            }
+
+            const start = cssDocument.positionAt(match.index + 1);
+            const end = cssDocument.positionAt(match.index + 1 + className.length);
+            return Location.create(cssUri, Range.create(start.line, start.character, end.line, end.character));
+        } catch {
+            return createWholeFileLocation(resolvedCssPath);
+        }
+    };
 
     const isSameRange = (a: { start: number; end: number }, b: { start: number; end: number }): boolean => {
         return a.start === b.start && a.end === b.end;
@@ -73,23 +146,17 @@ export async function handleDefinition(
 
     const styleBlock = graph.ast.styleBlock;
     if (styleBlock?.src && styleBlock.srcRange && containsOffset(styleBlock.srcRange, offset)) {
-        const resolvedCssPath = resolveImportPath(document.uri, styleBlock.src, workspaceRoots);
-        if (resolvedCssPath) {
-            return Location.create(URI.file(resolvedCssPath).toString(), Range.create(0, 0, 0, 0));
+        const styleLocation = resolvePathLocation(styleBlock.src);
+        if (styleLocation) {
+            return styleLocation;
         }
     }
 
     for (const imp of graph.ast.imports) {
-        if (imp.pathRange && containsOffset(imp.pathRange, offset) && imp.path) {
-            const resolvedPath = resolveImportPath(document.uri, imp.path, workspaceRoots);
-            if (resolvedPath) {
-                return Location.create(URI.file(resolvedPath).toString(), Range.create(0, 0, 0, 0));
-            }
-        }
-        if (imp.nameRange && containsOffset(imp.nameRange, offset) && imp.path) {
-            const resolvedPath = resolveImportPath(document.uri, imp.path, workspaceRoots);
-            if (resolvedPath) {
-                return Location.create(URI.file(resolvedPath).toString(), Range.create(0, 0, 0, 0));
+        if (imp.path && containsOffset(imp.range, offset)) {
+            const importLocation = resolvePathLocation(imp.path);
+            if (importLocation) {
+                return importLocation;
             }
         }
     }
@@ -119,15 +186,15 @@ export async function handleDefinition(
         }
         const importedPath = graph.importMap.get(component.name);
         if (importedPath) {
-            const resolvedPath = resolveImportPath(document.uri, importedPath, workspaceRoots);
-            if (resolvedPath) {
-                return Location.create(URI.file(resolvedPath).toString(), Range.create(0, 0, 0, 0));
+            const componentLocation = resolvePathLocation(importedPath);
+            if (componentLocation) {
+                return componentLocation;
             }
         }
         const catalog = await collectWorkspaceComponents(document.uri, workspaceRoots, componentCache);
         const uri = catalog.get(component.name);
         if (uri) {
-            return Location.create(uri, Range.create(0, 0, 0, 0));
+            return createWholeFileLocationFromUri(uri);
         }
     }
 
@@ -156,9 +223,9 @@ export async function handleDefinition(
         const cssDef = graph.css.cssClassMap.get(classUse.name);
         if (cssDef) {
             if (styleBlock?.src && cssDef.range.start === 0 && cssDef.range.end === 0) {
-                const resolvedCssPath = resolveImportPath(document.uri, styleBlock.src, workspaceRoots);
-                if (resolvedCssPath) {
-                    return Location.create(URI.file(resolvedCssPath).toString(), Range.create(0, 0, 0, 0));
+                const externalCssClassLocation = resolveExternalCssClassLocation(classUse.name);
+                if (externalCssClassLocation) {
+                    return externalCssClassLocation;
                 }
             }
             return Location.create(document.uri, toLspRange(document, cssDef.range));
