@@ -47,6 +47,20 @@
             "contentName": "meta.embedded.block.python",
             "patterns": [
                 {
+                    "match": "(\\.)(keys|values|items|get|pop|append|extend|insert|remove|clear|update|setdefault|copy|lower|upper|strip|lstrip|rstrip|split|join|replace|startswith|endswith|find|format|isdigit|isalpha|isalnum|isspace|capitalize|title|swapcase|count|index)(\\s*\\()",
+                    "captures": {
+                        "1": {
+                            "name": "punctuation.accessor.python"
+                        },
+                        "2": {
+                            "name": "support.function.python"
+                        },
+                        "3": {
+                            "name": "punctuation.section.arguments.begin.python"
+                        }
+                    }
+                },
+                {
                     "include": "source.python"
                 }
             ]

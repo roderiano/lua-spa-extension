@@ -7,6 +7,7 @@ import {
     ServerOptions,
     TransportKind
 } from 'vscode-languageclient/node';
+import { registerLspaPythonFeatures } from './lspa-python/pythonFeatureBridge';
 
 let client: LanguageClient | undefined;
 
@@ -69,6 +70,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             void client?.stop();
         }
     });
+
+    // Register Python feature bridge for <python> blocks
+    registerLspaPythonFeatures(context);
 
     context.subscriptions.push(
         vscode.commands.registerCommand('lspa.restartLanguageServer', async () => {
