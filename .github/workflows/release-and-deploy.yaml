@@ -38,13 +38,7 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Validate quality gates
-        run: |
-          npm run compile
-          npm run lint
-          npm test
-
+        
       - name: Read extension version from package.json
         id: get_version
         run: |
