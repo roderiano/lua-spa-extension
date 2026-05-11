@@ -8,6 +8,8 @@ import {
     Definition,
     Diagnostic,
     DiagnosticSeverity,
+    DocumentLink,
+    DocumentLinkParams,
     DidChangeConfigurationNotification,
     DocumentFormattingParams,
     DocumentSymbol,
@@ -47,7 +49,8 @@ import {
     toLspRange
 } from './functions/symbols';
 import { type ComponentCache, type CrossSemanticGraph, type GraphCache } from './functions/types';
-import { extractWorkspaceRoots } from './functions/workspace';
+import { extractWorkspaceRoots, resolveImportPath } from './functions/workspace';
+import { URI } from 'vscode-uri';
 
 const connection = createConnection(ProposedFeatures.all);
 const documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
@@ -81,6 +84,9 @@ connection.onInitialize((params: InitializeParams): InitializeResult => {
             documentSymbolProvider: true,
             foldingRangeProvider: true,
             codeActionProvider: true,
+            documentLinkProvider: {
+                resolveProvider: false
+            },
             semanticTokensProvider: {
                 legend: {
                     tokenTypes,
@@ -234,6 +240,40 @@ connection.onFoldingRanges((params): FoldingRange[] => {
 
 connection.onCodeAction(async (params): Promise<CodeAction[]> => {
     return handleCodeActions(params, documents, graphCache, workspaceRoots, componentCache);
+});
+
+connection.onDocumentLinks((params: DocumentLinkParams): DocumentLink[] => {
+    const document = documents.get(params.textDocument.uri);
+    if (!document) {
+        return [];
+    }
+
+    const graph = getGraph(document, graphCache);
+    const links: DocumentLink[] = [];
+
+    const pushPathLink = (rawPath: string, range: { start: number; end: number }, tooltip: string): void => {
+        const resolvedPath = resolveImportPath(document.uri, rawPath, workspaceRoots);
+        if (!resolvedPath) {
+            return;
+        }
+
+        const link = DocumentLink.create(toLspRange(document, range), URI.file(resolvedPath).toString());
+        link.tooltip = tooltip;
+        links.push(link);
+    };
+
+    for (const imp of graph.ast.imports) {
+        if (!imp.path || !imp.pathRange) {
+            continue;
+        }
+        pushPathLink(imp.path, imp.pathRange, 'Open imported component file');
+    }
+
+    if (graph.ast.styleBlock?.src && graph.ast.styleBlock.srcRange) {
+        pushPathLink(graph.ast.styleBlock.src, graph.ast.styleBlock.srcRange, 'Open style source file');
+    }
+
+    return links;
 });
 
 connection.languages.semanticTokens.on((params: SemanticTokensParams): SemanticTokens => {

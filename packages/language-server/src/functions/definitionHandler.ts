@@ -153,7 +153,7 @@ export async function handleDefinition(
     }
 
     for (const imp of graph.ast.imports) {
-        if (imp.path && containsOffset(imp.range, offset)) {
+        if (imp.path && imp.pathRange && containsOffset(imp.pathRange, offset)) {
             const importLocation = resolvePathLocation(imp.path);
             if (importLocation) {
                 return importLocation;
