@@ -58,6 +58,12 @@ export function mapLspaPositionToPython(document: vscode.TextDocument, position:
 }
 
 export function mapPythonRangeToLspa(range: vscode.Range, snapshot: VirtualPythonSnapshot, sourceDocument: vscode.TextDocument): vscode.Range | undefined {
+    const lines = lineOffsets(snapshot.content);
+    const maxLine = lines.length - 1;
+    if (range.start.line < 0 || range.end.line < 0 || range.start.line > maxLine || range.end.line > maxLine) {
+        return undefined;
+    }
+
     const virtualStart = offsetAt(snapshot.content, range.start);
     const virtualEnd = offsetAt(snapshot.content, range.end);
 

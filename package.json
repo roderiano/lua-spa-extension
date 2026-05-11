@@ -23,8 +23,8 @@
                 ],
                 "configuration": "./language-configuration.json",
                 "icon": {
-                    "light": "./images/favicon.ico",
-                    "dark": "./images/favicon.ico"
+                    "light": "./images/logo.png",
+                    "dark": "./images/logo.png"
                 }
             }
         ],
@@ -62,7 +62,7 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
-        "compile": "tsc -p ./",
+        "compile": "node -e \"require('node:fs').rmSync('out', { recursive: true, force: true })\" && tsc -p ./",
         "watch": "tsc -watch -p ./",
         "pretest": "npm run compile && npm run lint",
         "lint": "eslint src packages",
