@@ -78,7 +78,7 @@ export function listImportCandidates(documentUri: string, workspaceRoots: string
                 continue;
             }
 
-            let rel = path.relative(baseDir, abs).replace(/\\/g, '/').replace(/\.lspa$/, '');
+            let rel = path.relative(baseDir, abs).replace(/\\/g, '/');
             if (!rel.startsWith('.')) {
                 rel = `./${rel}`;
             }
