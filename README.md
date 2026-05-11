@@ -1,178 +1,247 @@
-# LSPA VS Code Extension
+<div align="center">
+  <img src="http://github.com/roderiano/lua-spa/raw/release/src/lua_template/static/logo.png" alt="lua-spa logo" width="120" height="120" />
+  <h1><strong>LUA-SPA VS Code Extension</strong></h1>
+</div>
 
-LSPA is a Python-first component language for `.lspa` files.
-This extension provides a modern authoring experience inspired by Vue/Svelte/Astro workflows, built on top of a Language Server Protocol architecture.
+<p align="center">
+  <img src="https://img.shields.io/github/license/roderiano/lua-spa-extension" />
+  <img src="https://img.shields.io/github/v/release/roderiano/lua-spa-extension" />
+  <img src="https://img.shields.io/github/stars/roderiano/lua-spa-extension?style=flat" />
+</p>
 
-## What This Extension Supports
+LUA-SPA adds complete language support for LSPA files with a custom Language Server and a Python bridge for embedded Python code inside the python block.
 
-Core language surface (only these directives/events are valid):
+## What The Extension Offers
 
-- `@import`
-- `<python>`
-- `<template>`
-- `<style>`
-- `i-for`
-- `i-if`
-- `i-else`
-- `i-elif`
-- `i-model`
-- `@click`
+### Language support for LSPA files
 
-## Features
+- File association for .lspa
+- TextMate grammar for LSPA
+- HTML injection in template block
+- Embedded language mapping:
+  - python block -> Python
+  - template block -> HTML
+  - style block -> CSS
 
-- Syntax highlighting (TextMate grammar + template injection)
-- IntelliSense and autocomplete
-- Semantic highlighting (semantic tokens)
-- Hover information
+### Language Server features
+
+- IntelliSense and contextual completion for:
+  - @import lines
+  - component tags in template
+  - directives and events
+  - state, props and py fields
+  - class names from style and Tailwind seed list
+- Hover information for symbols and framework concepts
 - Go to Definition
 - Find References
-- Rename Symbol (cross-block)
-- Diagnostics and Quick Fixes
-- Auto import suggestions for components
-- Formatter
+- Rename Symbol
+- Formatting for LSPA documents
 - Document symbols
 - Folding ranges
-- Snippets
-- Full LSP client/server integration
+- Semantic tokens
+- Code actions (quick fixes)
+- Document links for import and css paths
 
-## Professional Architecture
+### Diagnostics
 
-```text
-/packages
-  /language-server
-  /parser
-  /python-analyzer
-  /template-analyzer
-  /css-analyzer
-/src
-  extension.ts (LSP client bootstrap)
-```
+Diagnostics currently include:
 
-### Cross Semantic Graph
+- invalid import path
+- unused import
+- missing component import
+- invalid directive
+- invalid event
+- invalid directive syntax
+- invalid i-for expression
+- missing method for events
+- missing state field usage
+- missing props field usage
+- missing py field usage
+- unknown css class used in template
 
-The language server builds a cross semantic graph that connects:
+### Quick fixes
 
-- template <-> python
-- style <-> template
-- imports <-> components
+- add missing component import
+- remove unused import
+- create missing method in python block
+- create missing state key
 
-This graph drives completions, diagnostics, definitions, references, and rename flows.
+### Python bridge inside the python block
 
-## Parsing Layers
+The extension mirrors the python block and delegates to Python providers so users get Python-like behavior while editing LSPA.
 
-### Parser (`packages/parser`)
-
-Parses `.lspa` into a structured AST-like model:
-
-- imports
-- python/template/style blocks
-- methods
-- state/props keys
-- directives/events
-- interpolations
-- component usages
-- CSS and template class names
-
-### Python Analyzer (`packages/python-analyzer`)
-
-Provides semantic model for:
-
-- methods from setup scope
-- reactive `state`
-- `props`
-- lifecycle docs (`mounted`, `unmounted`, `hydrated`, `updated`)
-
-### Template Analyzer (`packages/template-analyzer`)
-
-Validates and classifies:
-
-- allowed directives
-- allowed events
-- component usage set
-
-### CSS Analyzer (`packages/css-analyzer`)
-
-Provides:
-
-- CSS class map from `<style>` block
-- template class usages
-- Tailwind utility completion seed list
-
-## LSP Features Implemented
-
-The server in `packages/language-server` implements:
+Supported bridge capabilities include:
 
 - completion
 - hover
-- diagnostics
-- formatting
+- definition
 - references
 - rename
-- semantic tokens
-- folding ranges
-- document symbols
-- code actions
+- diagnostics mapping back to source LSPA
+- semantic token mapping back to source LSPA
 
-## Diagnostics and Code Actions
+### Visual enhancements in editor
 
-Diagnostics include:
+- imported component names highlighted in template
+- import component name highlighted after @import
+- import path highlighting
+- css src path highlighting
+- template and python tag highlighting
 
-- invalid imports
-- unused imports
-- missing component imports
-- invalid directives/events
-- invalid `i-for` expressions
-- missing methods for `@click`
-- missing `state.*` and `props.*` references
-- unknown CSS classes in template
+### Command
 
-Quick fixes include:
+- LSPA: Restart Language Server
 
-- import missing component
-- remove unused import
-- create missing method
-- create missing state field
+## Supported LSPA syntax surface
 
-## Formatter
+- @import
+- python block
+- template block
+- style block
+- i-for
+- i-if
+- i-else
+- i-elif
+- i-model
+- @click
 
-The formatter normalizes:
+## Requirements
 
-- import ordering
-- spacing and blank lines
-- trailing spaces
+The extension checks for Python Black on activation.
 
-It is designed to coexist with external formatters such as Black/Ruff/Prettier in mixed workflows.
+If Black is missing, install it with:
 
-## Snippets
+```bash
+python -m pip install black
+```
 
-Included snippets:
+## Project structure
 
-- `lspa-component`
-- `lspa-state`
-- `i-for`
-- `i-if`
-- `@click`
+```text
+packages/
+  language-server/
+  parser/
+  python-analyzer/
+  template-analyzer/
+  css-analyzer/
+src/
+  extension.ts
+  lspa-python/
+src/test/
+```
 
-## Development
+## Development setup
 
-### Install
+Install dependencies:
 
 ```bash
 npm install
 ```
 
-### Build
+Build extension and language server:
 
 ```bash
 npm run compile
 ```
 
-### Watch
+Watch mode:
 
 ```bash
 npm run watch
 ```
 
-### Run extension
+Run in Extension Development Host:
 
-Press `F5` in VS Code to launch an Extension Development Host.
+- Open the workspace in VS Code
+- Press F5
+
+## How to run tests
+
+Run full validation pipeline:
+
+```bash
+npm run compile
+npm run lint
+npm test
+```
+
+Or run the configured pretest plus tests:
+
+```bash
+npm test
+```
+
+Notes:
+
+- pretest already runs compile and lint
+- tests run with vscode-test in an Extension Host
+
+## Contributing with trunk-based development on release
+
+This repository uses trunk-based flow with release as the trunk branch.
+
+### Branch strategy
+
+- Trunk branch: release
+- Work in short-lived branches created from release
+- Open PRs back into release
+- Merge small, frequent, and tested changes
+
+### Typical workflow
+
+1. Sync trunk locally
+
+```bash
+git checkout release
+git pull origin release
+```
+
+2. Create a short-lived branch
+
+```bash
+git checkout -b feat/your-change-name
+```
+
+3. Implement and validate
+
+```bash
+npm run compile
+npm run lint
+npm test
+```
+
+4. Commit focused changes
+
+```bash
+git add .
+git commit -m "feat(scope): short description"
+```
+
+5. Rebase on latest release before PR
+
+```bash
+git fetch origin
+git rebase origin/release
+```
+
+6. Push and open PR to release
+
+```bash
+git push -u origin feat/your-change-name
+```
+
+### Trunk-based rules for contributors
+
+- Keep branches short-lived
+- Prefer small PRs
+- Keep release always green
+- Never merge without compile, lint and test passing
+- Resolve conflicts by rebasing on release
+
+### Hotfix flow
+
+For urgent fixes, branch from release, validate quickly, and merge back to release as soon as tests pass.
+
+## License
+
+See repository license and project policies.
