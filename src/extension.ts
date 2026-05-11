@@ -30,7 +30,7 @@ function hasBlackInstalled(): boolean {
 async function promptBlackInstall(): Promise<void> {
     const installAction = 'Install Black';
     const selected = await vscode.window.showErrorMessage(
-        'LUA-SPA Clean requires Python Black. Install it using `python -m pip install black` and reload VS Code.',
+        'LUA-SPA requires Python Black. Install it using `python -m pip install black` and reload VS Code.',
         installAction
     );
 

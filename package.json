@@ -1,8 +1,10 @@
 {
     "name": "lua-spa-extension",
-    "displayName": "LUA-SPA Clean",
+    "displayName": "LUA-SPA Extension",
     "description": "Extension for backend-first SPA framework in Python.",
-    "version": "1.0.0",
+    "icon": "images/logo.png",
+    "markdown": "github",
+    "version": "1.0.1",
     "publisher": "roderiano",
     "repository": {
         "type": "git",
