@@ -12,6 +12,11 @@ import { registerLspaPythonFeatures } from './lspa-python/pythonFeatureBridge';
 
 let client: LanguageClient | undefined;
 let importedComponentDecoration: vscode.TextEditorDecorationType | undefined;
+let importComponentNameDecoration: vscode.TextEditorDecorationType | undefined;
+let importPathDecoration: vscode.TextEditorDecorationType | undefined;
+let cssPathDecoration: vscode.TextEditorDecorationType | undefined;
+let templateTagDecoration: vscode.TextEditorDecorationType | undefined;
+let pythonTagDecoration: vscode.TextEditorDecorationType | undefined;
 
 function hasBlackInstalled(): boolean {
     try {
@@ -39,13 +44,34 @@ async function promptBlackInstall(): Promise<void> {
     void vscode.window.showInformationMessage('Black installation started. Reload VS Code after it finishes.');
 }
 
-function applyImportedComponentDecorations(editor: vscode.TextEditor): void {
-    if (!importedComponentDecoration) {
+function rangesFromRegex(document: vscode.TextDocument, pattern: RegExp): vscode.Range[] {
+    const ranges: vscode.Range[] = [];
+    const text = document.getText();
+
+    for (const match of text.matchAll(pattern)) {
+        if (match.index === undefined) {
+            continue;
+        }
+        const start = document.positionAt(match.index);
+        const end = document.positionAt(match.index + match[0].length);
+        ranges.push(new vscode.Range(start, end));
+    }
+
+    return ranges;
+}
+
+function applyVisualDecorations(editor: vscode.TextEditor): void {
+    if (!importedComponentDecoration || !importComponentNameDecoration || !importPathDecoration || !cssPathDecoration || !templateTagDecoration || !pythonTagDecoration) {
         return;
     }
 
     if (editor.document.languageId !== 'lspa') {
         editor.setDecorations(importedComponentDecoration, []);
+        editor.setDecorations(importComponentNameDecoration, []);
+        editor.setDecorations(importPathDecoration, []);
+        editor.setDecorations(cssPathDecoration, []);
+        editor.setDecorations(templateTagDecoration, []);
+        editor.setDecorations(pythonTagDecoration, []);
         return;
     }
 
@@ -64,12 +90,42 @@ function applyImportedComponentDecorations(editor: vscode.TextEditor): void {
             return new vscode.Range(start, end);
         });
 
+    const importPathRanges = ast.imports
+        .filter((entry) => entry.pathRange)
+        .map((entry) => {
+            const range = entry.pathRange!;
+            const start = editor.document.positionAt(range.start);
+            const end = editor.document.positionAt(range.end);
+            return new vscode.Range(start, end);
+        });
+
+    const importComponentNameRanges = ast.imports
+        .filter((entry) => entry.nameRange)
+        .map((entry) => {
+            const range = entry.nameRange!;
+            const start = editor.document.positionAt(range.start);
+            const end = editor.document.positionAt(range.end);
+            return new vscode.Range(start, end);
+        });
+
+    const cssPathRanges = ast.styleBlock?.srcRange
+        ? [new vscode.Range(editor.document.positionAt(ast.styleBlock.srcRange.start), editor.document.positionAt(ast.styleBlock.srcRange.end))]
+        : [];
+
+    const templateRanges = rangesFromRegex(editor.document, /<\/?template\b[^>]*>/g);
+    const pythonRanges = rangesFromRegex(editor.document, /<\/?python\b[^>]*>/g);
+
     editor.setDecorations(importedComponentDecoration, ranges);
+    editor.setDecorations(importComponentNameDecoration, importComponentNameRanges);
+    editor.setDecorations(importPathDecoration, importPathRanges);
+    editor.setDecorations(cssPathDecoration, cssPathRanges);
+    editor.setDecorations(templateTagDecoration, templateRanges);
+    editor.setDecorations(pythonTagDecoration, pythonRanges);
 }
 
-function refreshImportedComponentDecorations(): void {
+function refreshVisualDecorations(): void {
     for (const editor of vscode.window.visibleTextEditors) {
-        applyImportedComponentDecorations(editor);
+        applyVisualDecorations(editor);
     }
 }
 
@@ -111,26 +167,58 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     registerLspaPythonFeatures(context);
 
     importedComponentDecoration = vscode.window.createTextEditorDecorationType({
-        color: new vscode.ThemeColor('symbolIcon.classForeground')
+        color: new vscode.ThemeColor('symbolIcon.classForeground'),
+        fontWeight: '700',
+        textDecoration: 'underline'
+    });
+
+    importComponentNameDecoration = vscode.window.createTextEditorDecorationType({
+        color: new vscode.ThemeColor('symbolIcon.classForeground'),
+        fontWeight: '700'
+    });
+
+    importPathDecoration = vscode.window.createTextEditorDecorationType({
+        color: new vscode.ThemeColor('symbolIcon.classForeground'),
+        textDecoration: 'underline'
+    });
+
+    cssPathDecoration = vscode.window.createTextEditorDecorationType({
+        color: new vscode.ThemeColor('symbolIcon.fileForeground'),
+        textDecoration: 'underline wavy'
+    });
+
+    templateTagDecoration = vscode.window.createTextEditorDecorationType({
+        color: new vscode.ThemeColor('symbolIcon.colorForeground'),
+        fontWeight: '700'
+    });
+
+    pythonTagDecoration = vscode.window.createTextEditorDecorationType({
+        color: new vscode.ThemeColor('symbolIcon.namespaceForeground'),
+        fontWeight: '700'
     });
 
     context.subscriptions.push(importedComponentDecoration);
+    context.subscriptions.push(importComponentNameDecoration);
+    context.subscriptions.push(importPathDecoration);
+    context.subscriptions.push(cssPathDecoration);
+    context.subscriptions.push(templateTagDecoration);
+    context.subscriptions.push(pythonTagDecoration);
     context.subscriptions.push(vscode.window.onDidChangeVisibleTextEditors(() => {
-        refreshImportedComponentDecorations();
+        refreshVisualDecorations();
     }));
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor((editor) => {
         if (editor) {
-            applyImportedComponentDecorations(editor);
+            applyVisualDecorations(editor);
         }
     }));
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => {
         for (const editor of vscode.window.visibleTextEditors) {
             if (editor.document.uri.toString() === event.document.uri.toString()) {
-                applyImportedComponentDecorations(editor);
+                applyVisualDecorations(editor);
             }
         }
     }));
-    refreshImportedComponentDecorations();
+    refreshVisualDecorations();
 
     context.subscriptions.push(
         vscode.commands.registerCommand('lspa.restartLanguageServer', async () => {
@@ -150,4 +238,9 @@ export async function deactivate(): Promise<void> {
     }
 
     importedComponentDecoration = undefined;
+    importComponentNameDecoration = undefined;
+    importPathDecoration = undefined;
+    cssPathDecoration = undefined;
+    templateTagDecoration = undefined;
+    pythonTagDecoration = undefined;
 }

@@ -47,12 +47,6 @@
                 ]
             }
         ],
-        "snippets": [
-            {
-                "language": "lspa",
-                "path": "./snippets/lspa.code-snippets"
-            }
-        ],
         "commands": [
             {
                 "command": "lspa.restartLanguageServer",
