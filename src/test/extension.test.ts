@@ -20,17 +20,17 @@ class Features(Component):
 
 	def setup(self, props):
 		props = {
-			"title": "lua-spa",
+			"title": "moon-spa",
 			"subtitle": "Python Framework for Single Page Applications",
 			"tagline": "Combine Server Rendering with Client Hydration to build modern, fast SPAs with pure Python.",
-			"package_name": "lua-spa",
+			"package_name": "moon-spa",
 			"package_owner": "roderiano",
 			"versions_limit": 8,
 			"features": [
 				{
 					"icon": "python",
 					"title": "Pure Python",
-					"description": "Write component logic in Python while lua-spa handles runtime behavior."
+					"description": "Write component logic in Python while moon-spa handles runtime behavior."
 				}
 			],
 			**props,
@@ -65,7 +65,7 @@ class Features(Component):
 <template>
 	<section class="hero-route">
 		<button type="button" class="hero-route__btn" @click="reload_packages">Reload</button>
-		<code>pip install lua-spa=={{ py.pypi.latest }}</code>
+		<code>pip install moon-spa=={{ py.pypi.latest }}</code>
 		<p>{{ py.pypi.author }}</p>
 		<p>{{ state.status }} | {{ state.mounted }} | {{ state.reload_count }}</p>
 

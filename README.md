@@ -1,15 +1,15 @@
 <div align="center">
-  <img src="https://github.com/roderiano/lua-spa/raw/release/src/lua_template/static/logo.png" alt="lua-spa logo" width="120" height="120" />
-  <h1><strong>LUA-SPA VS Code Extension</strong></h1>
+  <img src="https://github.com/roderiano/moon-spa/raw/release/src/moon_template/static/logo.png" alt="moon-spa logo" width="120" height="120" />
+  <h1><strong>MOON-SPA VS Code Extension</strong></h1>
 </div>
 
 <p align="center">
-  <img src="https://img.shields.io/github/license/roderiano/lua-spa-extension" />
-  <img src="https://img.shields.io/github/v/release/roderiano/lua-spa-extension" />
-  <img src="https://img.shields.io/github/stars/roderiano/lua-spa-extension?style=flat" />
+  <img src="https://img.shields.io/github/license/roderiano/moon-spa-extension" />
+  <img src="https://img.shields.io/github/v/release/roderiano/moon-spa-extension" />
+  <img src="https://img.shields.io/github/stars/roderiano/moon-spa-extension?style=flat" />
 </p>
 
-LUA-SPA adds complete language support for LSPA files with a custom Language Server and a Python bridge for embedded Python code inside the python block.
+MOON-SPA adds complete language support for LSPA files with a custom Language Server and a Python bridge for embedded Python code inside the python block.
 
 ## What The Extension Offers
 

@@ -1,14 +1,14 @@
 {
-    "name": "lua-spa-extension",
-    "displayName": "LUA-SPA Extension",
+    "name": "moon-spa-extension",
+    "displayName": "MOON-SPA Extension",
     "description": "Extension for backend-first SPA framework in Python.",
     "icon": "images/logo.png",
     "markdown": "github",
-    "version": "1.0.1",
+    "version": "2.0.0",
     "publisher": "roderiano",
     "repository": {
         "type": "git",
-        "url": "https://github.com/roderiano/lua-spa-extension.git"
+        "url": "https://github.com/roderiano/moon-spa-extension.git"
     },
     "engines": {
         "vscode": "^1.118.0"
